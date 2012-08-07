@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# fail fast
+set -e
+
+LP_DIR=`cd $(dirname $0); cd ..; pwd`
+BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+. $BIN_DIR/common
+
+# parse args
+BUILD_DIR=$(cd $1; pwd)
+CACHE_DIR=$2
+
+# home directory from perspective of SBT; we rename
+# it because otherwise the project root and $HOME
+# are the same, and by default .sbt has a (different)
+# meaning in those two places
+SBT_USER_HOME=".sbt_home"
+SBT_USER_HOME_ABSOLUTE="$BUILD_DIR/$SBT_USER_HOME"
+# where we put the SBT binaries
+SBT_BINDIR="$SBT_USER_HOME"/bin
+
+# chdir as sbt expects
+cd $BUILD_DIR
+
+# unpack cache
+CACHED_DIRS="$SBT_USER_HOME/.ivy2 $SBT_BINDIR"
+for DIR in $CACHED_DIRS; do
+  rm -rf $DIR
+  if [ -d $CACHE_DIR/$DIR ]; then
+    mkdir -p $DIR
+    cp -r $CACHE_DIR/$DIR/.  $DIR
+  fi
+done
+
+if ! test -e project/build.properties; then
+	echo " !      Error, your scala project must include project/build.properties and define sbt.version"
+	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
+        exit 1
+fi
+
+if ! has_supported_sbt_version ${BUILD_DIR}; then
+	echo " !      Error, you have defined an unsupported sbt.version in project/build.properties"
+	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
+	exit 1
+fi
+ 
+SBT_VERSION="$(get_supported_sbt_version ${BUILD_DIR})"
+SBT_JAR="sbt-launch-0.11.3-2.jar"
+SBT_PROPS="sbt-$SBT_VERSION.boot.properties"
+SBT_URL="http://s3.amazonaws.com/heroku-jvm-langpack-scala/$SBT_JAR"
+SBT_PROPS_URL="http://s3.amazonaws.com/heroku-jvm-langpack-scala/$SBT_PROPS"
+## in 0.10 start-script will depend on package, if packaging
+## is required - it may not be, we can run .class files or a package-war
+## instead.
+SBT_TASKS="clean compile publish-local"
+
+
+if [ ! -d .ivy2/cache ]; then
+   mkdir -p .ivy2/cache
+fi
+
+if [ ! -f "$SBT_BINDIR"/"$SBT_JAR" ]; then
+  mkdir -p "$SBT_BINDIR"
+  cd "$SBT_BINDIR"
+
+  ## clean up any old versions
+  /bin/rm -f sbt sbt-launch-*.jar || true
+
+  echo "-----> Building app with sbt"
+  curl --silent --max-time 60 -O --location $SBT_URL
+  echo "#!/usr/bin/env bash" > sbt
+  echo "/usr/bin/java -Dsbt.boot.properties=/app/.sbt_home/bin/sbt.boot.properties -Duser.home=/app/.sbt_home -Divy.default.ivy.user.dir=/app/.sbt_home/.ivy2 -jar /app/.sbt_home/bin/$SBT_JAR \"set {publishMavenStyle := true;}\" \"\$@\"" >> sbt
+  chmod a+x sbt
+  ## some of the downloads don't have the version in the name,
+  ## fix it.
+  if [ -f "sbt-launch.jar" ] ; then
+      mv "sbt-launch.jar" "$SBT_JAR"
+  fi
+
+  cd $BUILD_DIR
+fi
+
+#echo -n "-----> Installing sbt.boot.properties..."
+curl --silent --max-time 10 --location $SBT_PROPS_URL --output "$SBT_BINDIR"/sbt.boot.properties
+#echo " done"
+
+
+#echo -n "-----> Intsalling plugins..."
+HEROKU_PLUGIN="Heroku-0.11.3.scala"
+mkdir -p "$SBT_USER_HOME/.sbt/plugins" && curl --silent --max-time 10 --location "http://s3.amazonaws.com/heroku-jvm-langpack-scala/$HEROKU_PLUGIN" --output "$SBT_USER_HOME/.sbt/plugins/$HEROKU_PLUGIN"
+
+HEROKU_PLUGINS_CONFIG="heroku-plugins-0.11.3.sbt"
+mkdir -p "$SBT_USER_HOME/.sbt/plugins" && curl --silent --max-time 10 --location "http://s3.amazonaws.com/heroku-jvm-langpack-scala/$HEROKU_PLUGINS_CONFIG"  --output "$SBT_USER_HOME/.sbt/plugins/$HEROKU_PLUGINS_CONFIG"
+#echo " done"
+
+# build app
+echo "-----> Running: sbt $SBT_TASKS"
+test -e "$SBT_BINDIR"/sbt.boot.properties && PROPS_OPTION="-Dsbt.boot.properties=$SBT_BINDIR/sbt.boot.properties"
+HOME="$SBT_USER_HOME_ABSOLUTE" java -Xmx1024M -Dfile.encoding=UTF8 -Duser.home="$SBT_USER_HOME_ABSOLUTE" -Dsbt.log.noformat=true -Divy.default.ivy.user.dir="$SBT_USER_HOME_ABSOLUTE/.ivy2" $PROPS_OPTION -jar "$SBT_BINDIR"/$SBT_JAR $SBT_TASKS 2>&1 | sed -u 's/^/       /'
+if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+  echo " !     Failed to build app with sbt"
+  exit 1
+fi
+
+# Store cache
+for DIR in $CACHED_DIRS; do
+  rm -rf $CACHE_DIR/$DIR
+  if [ -d $DIR ]; then
+    mkdir -p $CACHE_DIR/$DIR
+    cp -r $DIR/.  $CACHE_DIR/$DIR
+  fi
+done
+
+
+# Put binaries
+$BIN_DIR/compile-python $1 $2
+
+

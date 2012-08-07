@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# bin/use <build-dir>
+
+echo "sbt-repo"
