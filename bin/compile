@@ -35,7 +35,8 @@ for DIR in $CACHED_DIRS; do
 done
 
 if test -e $BUILD_DIR/.gitmodules; then
-  for subpath in `git submodule -q foreach --recursive bash -c "pwd"`; do
+  SUBMODULES=`find . -type d -name .git -exec dirname {} \;`
+  for subpath in $SUBMODULES; do
     if ! test -e $subpath/project/build.properties; then
     	echo " !      Error, your scala project must include $subpath/project/build.properties and define sbt.version"
     	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
@@ -104,11 +105,6 @@ fi
 curl --silent --max-time 10 --location $SBT_PROPS_URL --output "$SBT_BINDIR"/sbt.boot.properties
 #echo " done"
 
-GIT_SUBMODULE_WRAPPER=""
-if [ -f $BUILD_DIR/.gitmodules ]; then
-  GIT_SUBMODULE_WRAPPER="git submodule foreach --recursive"
-fi
-
 #echo -n "-----> Intsalling plugins..."
 HEROKU_PLUGIN="Heroku-0.11.3.scala"
 mkdir -p "$SBT_USER_HOME/.sbt/plugins" && curl --silent --max-time 10 --location "http://s3.amazonaws.com/heroku-jvm-langpack-scala/$HEROKU_PLUGIN" --output "$SBT_USER_HOME/.sbt/plugins/$HEROKU_PLUGIN"
@@ -120,7 +116,17 @@ mkdir -p "$SBT_USER_HOME/.sbt/plugins" && curl --silent --max-time 10 --location
 # build app
 echo "-----> Running: sbt $SBT_TASKS"
 test -e "$SBT_BINDIR"/sbt.boot.properties && PROPS_OPTION="-Dsbt.boot.properties=$SBT_BINDIR/sbt.boot.properties"
-HOME="$SBT_USER_HOME_ABSOLUTE" $GIT_SUBMODULE_WRAPPER java -Xmx1024M -Dfile.encoding=UTF8 -Duser.home="$SBT_USER_HOME_ABSOLUTE" -Dsbt.log.noformat=true -Divy.default.ivy.user.dir="$SBT_USER_HOME_ABSOLUTE/.ivy2" $PROPS_OPTION -jar "$SBT_BINDIR"/$SBT_JAR $SBT_TASKS 2>&1 | sed -u 's/^/       /'
+
+if test -e .gitmodules; then
+  for subpath in $SUBMODULES; do
+    pushd $subpath
+    HOME="$SBT_USER_HOME_ABSOLUTE" java -Xmx1024M -Dfile.encoding=UTF8 -Duser.home="$SBT_USER_HOME_ABSOLUTE" -Dsbt.log.noformat=true -Divy.default.ivy.user.dir="$SBT_USER_HOME_ABSOLUTE/.ivy2" $PROPS_OPTION -jar "$SBT_BINDIR"/$SBT_JAR $SBT_TASKS 2>&1 | sed -u 's/^/       /'
+    popd
+  done
+else
+  HOME="$SBT_USER_HOME_ABSOLUTE" java -Xmx1024M -Dfile.encoding=UTF8 -Duser.home="$SBT_USER_HOME_ABSOLUTE" -Dsbt.log.noformat=true -Divy.default.ivy.user.dir="$SBT_USER_HOME_ABSOLUTE/.ivy2" $PROPS_OPTION -jar "$SBT_BINDIR"/$SBT_JAR $SBT_TASKS 2>&1 | sed -u 's/^/       /'
+fi
+
 if [ "${PIPESTATUS[*]}" != "0 0" ]; then
   echo " !     Failed to build app with sbt"
   exit 1
