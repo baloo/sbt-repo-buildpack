@@ -13,6 +13,9 @@ Example usage:
     target src
 
     $ heroku create --stack cedar --buildpack https://github.com/baloo/sbt-repo-buildpack.git
+    
+    $ # you may use this after
+    $ heroku config:add BUILDPACK_URL=https://github.com/baloo/sbt-repo-buildpack.git
 
     $ git push heroku master
     ...
