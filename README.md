@@ -26,9 +26,6 @@ Example usage:
 
 Config
 ------
-By default content will not be exposed on the internet to publish it:
-
-    $ heroku config:add NO_AUTH=True
 
 If you want to authenticate other people from your org on google apps set:
 
