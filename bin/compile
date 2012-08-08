@@ -125,3 +125,5 @@ find . -maxdepth 1 \
   \! -name .. \
     -print -exec rm -rf {} +
 
+find $BUILD_DIR -ls
+
