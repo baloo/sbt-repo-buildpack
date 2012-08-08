@@ -4,6 +4,8 @@
 # fail fast
 set -e
 
+set -x
+
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
 . $BIN_DIR/common
