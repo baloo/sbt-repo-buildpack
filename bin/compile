@@ -34,16 +34,34 @@ for DIR in $CACHED_DIRS; do
   fi
 done
 
-if ! test -e project/build.properties; then
-	echo " !      Error, your scala project must include project/build.properties and define sbt.version"
-	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
-        exit 1
-fi
+if test -e $BUILD_DIR/.gitmodules; then
+  for subpath in `git submodule -q foreach --recursive bash -c "pwd"`; do
+    if ! test -e $subpath/project/build.properties; then
+    	echo " !      Error, your scala project must include $subpath/project/build.properties and define sbt.version"
+    	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
+            exit 1
+    fi
 
-if ! has_supported_sbt_version ${BUILD_DIR}; then
-	echo " !      Error, you have defined an unsupported sbt.version in project/build.properties"
-	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
-	exit 1
+    if ! has_supported_sbt_version ${subpath}; then
+    	echo " !      Error, you have defined an unsupported sbt.version in $subpath/project/build.properties"
+    	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
+    	exit 1
+    fi
+    
+  end
+else
+
+  if ! test -e project/build.properties; then
+  	echo " !      Error, your scala project must include project/build.properties and define sbt.version"
+  	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
+          exit 1
+  fi
+
+  if ! has_supported_sbt_version ${BUILD_DIR}; then
+  	echo " !      Error, you have defined an unsupported sbt.version in project/build.properties"
+  	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
+  	exit 1
+  fi
 fi
  
 SBT_VERSION="$(get_supported_sbt_version ${BUILD_DIR})"
