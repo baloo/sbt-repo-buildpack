@@ -125,5 +125,8 @@ find . -maxdepth 1 \
   \! -name .. \
     -print -exec rm -rf {} +
 
+rm -rf $BUILD_DIR/.sbt_home/.ivy2/cache
+
+# Debug
 find $BUILD_DIR -ls
 
