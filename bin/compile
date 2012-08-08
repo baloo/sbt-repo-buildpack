@@ -117,4 +117,11 @@ done
 # Put binaries
 $BIN_DIR/compile-python $1 $2
 
+# Clean everything
+find . -maxdepth 1 \
+  \! -name .sbt_home \
+  \! -name .heroku \
+  \! -name . \
+  \! -name .. \
+    -print -exec rm -rf {} +
 
