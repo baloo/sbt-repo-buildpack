@@ -127,15 +127,21 @@ if test -e .gitmodules; then
     pushd $subpath
     cat $SBT_BINDIR/sbt.boot.properties
     HOME="$SBT_USER_HOME_ABSOLUTE" java -Xmx1024M -Dfile.encoding=UTF8 -Duser.home="$SBT_USER_HOME_ABSOLUTE" -Dsbt.log.noformat=true -Divy.default.ivy.user.dir="$SBT_USER_HOME_ABSOLUTE/.ivy2" $PROPS_OPTION -jar "$SBT_BINDIR"/$SBT_JAR $SBT_TASKS 2>&1 | sed -u 's/^/       /'
+
+    if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+      echo " !     Failed to build app with sbt"
+      exit 1
+    fi
     popd
   done
 else
   HOME="$SBT_USER_HOME_ABSOLUTE" java -Xmx1024M -Dfile.encoding=UTF8 -Duser.home="$SBT_USER_HOME_ABSOLUTE" -Dsbt.log.noformat=true -Divy.default.ivy.user.dir="$SBT_USER_HOME_ABSOLUTE/.ivy2" $PROPS_OPTION -jar "$SBT_BINDIR"/$SBT_JAR $SBT_TASKS 2>&1 | sed -u 's/^/       /'
-fi
 
-if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-  echo " !     Failed to build app with sbt"
-  exit 1
+  if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+    echo " !     Failed to build app with sbt"
+    exit 1
+  fi
+
 fi
 
 # Store cache
