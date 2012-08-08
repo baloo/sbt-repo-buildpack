@@ -32,9 +32,6 @@ def check_auth():
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if os.environ.get('NO_AUTH', 'False') == 'True':
-          return f(*args, **kwargs)
-
         auth = request.authorization
         if not check_auth():
             return redirect(url_for('login', next=request.url))
@@ -45,6 +42,8 @@ def requires_auth(f):
 @app.route('/login', methods=['GET', 'POST'])
 @oid.loginhandler
 def login():
+    if not 'DOMAIN' in os.environ:
+      return redirect(url_for('/'))
     domain = os.environ['DOMAIN']
     return oid.try_login("https://www.google.com/accounts/o8/site-xrds?hd=%s" % domain )
 
