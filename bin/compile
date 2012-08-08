@@ -50,7 +50,9 @@ if test -e $BUILD_DIR/.gitmodules; then
     	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
     	exit 1
     fi
-    
+
+    SBT_VERSION="$(get_supported_sbt_version ${subpath})"
+
   done
 else
 
@@ -65,9 +67,9 @@ else
   	echo " !      You must use a release verison of sbt, sbt.version=0.11.0 or greater"
   	exit 1
   fi
+  SBT_VERSION="$(get_supported_sbt_version ${BUILD_DIR})"
 fi
  
-SBT_VERSION="$(get_supported_sbt_version ${BUILD_DIR})"
 SBT_JAR="sbt-launch-0.11.3-2.jar"
 SBT_PROPS="sbt-$SBT_VERSION.boot.properties"
 SBT_URL="http://s3.amazonaws.com/heroku-jvm-langpack-scala/$SBT_JAR"
