@@ -19,7 +19,7 @@ CACHE_DIR=$2
 SBT_USER_HOME=".sbt_home"
 SBT_USER_HOME_ABSOLUTE="$BUILD_DIR/$SBT_USER_HOME"
 # where we put the SBT binaries
-SBT_BINDIR="$SBT_USER_HOME"/bin
+SBT_BINDIR="$SBT_USER_HOME_ABSOLUTE"/bin
 
 # chdir as sbt expects
 cd $BUILD_DIR
