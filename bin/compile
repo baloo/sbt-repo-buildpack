@@ -48,7 +48,7 @@ if test -e $BUILD_DIR/.gitmodules; then
     	exit 1
     fi
     
-  end
+  done
 else
 
   if ! test -e project/build.properties; then
