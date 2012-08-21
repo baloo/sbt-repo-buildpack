@@ -99,9 +99,9 @@ if [ ! -f "$SBT_BINDIR"/"$SBT_JAR" ]; then
   chmod a+x sbt
   ## some of the downloads don't have the version in the name,
   ## fix it.
-  if [ -f "sbt-launch.jar" ] ; then
-      mv "sbt-launch.jar" "$SBT_JAR"
-  fi
+  #if [ -f "sbt-launch.jar" ] ; then
+  #    mv "sbt-launch.jar" "$SBT_JAR"
+  #fi
 
   cd $BUILD_DIR
 fi
