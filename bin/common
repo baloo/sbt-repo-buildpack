@@ -45,7 +45,7 @@ _has_playConfig() {
 get_supported_sbt_version() {
   local ctxDir=$1
   if _has_buildPropertiesFile $ctxDir; then
-    sbtVersionLine="$(grep -P '[ \t]*sbt\.version[ \t]*=' "${ctxDir}"/project/build.properties | sed -E -e 's/[ \t\r\n]//g')"
+    sbtVersionLine="$(grep -P '[ \t]*sbt\.version[ \t]*=' "${ctxDir}"/project/build.properties | tr -d ' \t\r\n')"
     sbtVersion=$(expr "$sbtVersionLine" : 'sbt\.version=\(0\.1[1-2]\.[0-3]\)$')
     if [ "$sbtVersion" != 0 ] ; then
       echo "$sbtVersion"
