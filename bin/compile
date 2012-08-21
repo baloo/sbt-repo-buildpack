@@ -108,7 +108,7 @@ if [ ! -f "$SBT_BINDIR"/"$SBT_JAR" ]; then
 fi
 
 #echo -n "-----> Installing sbt.boot.properties..."
-curl --silent --max-time 10 --location $SBT_PROPS_URL --output "$SBT_BINDIR"/sbt.boot.properties
+#curl --silent --max-time 10 --location $SBT_PROPS_URL --output "$SBT_BINDIR"/sbt.boot.properties
 #echo " done"
 
 #echo -n "-----> Intsalling plugins..."
