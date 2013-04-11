@@ -3,8 +3,8 @@ import os, json
 from flask import Flask, render_template, request, g, session, flash, \
      redirect, url_for, abort, send_from_directory, request, Response
 
-from flaskext.openid import OpenID
-from flaskext.autoindex import AutoIndex
+from flask.ext.openid import OpenID
+from flask.ext.autoindex import AutoIndex
 
 app = Flask(__name__)
 app.secret_key = '\xa5\x10\xbfN3\x1f\t\xd0ec\xa1\xe8\xe7B\x1dU4!\xa1N@\xcf\xfe\xa2'
