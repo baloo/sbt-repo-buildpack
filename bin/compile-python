@@ -154,7 +154,7 @@ source $VIRTUALENV_LOC/bin/activate
 puts-step "Installing dependencies using pip version $(pip --version | awk '{print $2}')"
 pip install oauth2==1.5.211 Flask==0.8 Flask-OpenID==1.0.1 \
   python-openid==2.2.5 \
-  Flask-AutoIndex==0.4.1 \
+  Flask-AutoIndex==0.5 \
   --use-mirrors |indent
 
 # Make Virtualenv's paths relative for portability.
